@@ -13,6 +13,7 @@ func StartServer() {
 	if err := db.Init("./scheduler.db"); err != nil {
 		log.Fatalf("Ошибка инициализации БД: %v", err)
 	}
+	defer db.Close()
 	port := os.Getenv("TODO_PORT")
 	if port == "" {
 		port = "7540"

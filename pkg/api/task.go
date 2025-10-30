@@ -15,8 +15,10 @@ type TasksResp struct {
 	Tasks []*db.Task `json:"tasks"`
 }
 
+const LIMIT = 50
+
 func tasksHandler(w http.ResponseWriter, r *http.Request) {
-	tasks, err := db.Tasks(50)
+	tasks, err := db.Tasks(LIMIT)
 	if err != nil {
 		writeJSON(w, map[string]string{"error": err.Error()}, http.StatusInternalServerError)
 		return
@@ -184,6 +186,14 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func taskDoneHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Неподдерживаемый метод",
+		})
+		return
+	}
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		writeJSON(w, map[string]string{"error": "Не указан идентификатор"}, http.StatusBadRequest)

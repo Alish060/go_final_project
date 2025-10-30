@@ -50,11 +50,15 @@ func Tasks(limit int) ([]*Task, error) {
 		tasks = append(tasks, t)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	if tasks == nil {
 		tasks = make([]*Task, 0)
 	}
 
-	return tasks, rows.Err()
+	return tasks, nil
 }
 
 func GetTask(id string) (*Task, error) {

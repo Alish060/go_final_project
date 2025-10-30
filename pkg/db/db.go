@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 
 	_ "modernc.org/sqlite"
@@ -43,4 +44,10 @@ func Init(dbFile string) error {
 	}
 
 	return nil
+}
+
+func Close() {
+	if err := db.Close(); err != nil {
+		log.Printf("Ошибка закрытия БД: %v", err)
+	}
 }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -67,13 +68,20 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 }
 
 func nextDayHandler(w http.ResponseWriter, r *http.Request) {
-	// Чтение параметров
+	if r.Method != http.MethodGet {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "Неподдерживаемый метод",
+		})
+		return
+	}
 	nowStr := r.FormValue("now")
 	dateStr := r.FormValue("date")
 	repeat := r.FormValue("repeat")
 
 	if dateStr == "" || repeat == "" {
-		http.Error(w, "missing required parameters: date or repeat", http.StatusBadRequest)
+		writeJSON(w, map[string]string{"error": "missing required parameters: date or repeat"}, http.StatusBadRequest)
 		return
 	}
 
@@ -85,17 +93,17 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		now, err = time.Parse(DateFormat, nowStr)
 		if err != nil {
-			http.Error(w, "invalid now date format", http.StatusBadRequest)
+			writeJSON(w, map[string]string{"error": "invalid now date format"}, http.StatusBadRequest)
 			return
 		}
 	}
 
 	result, err := NextDate(now, dateStr, repeat)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		writeJSON(w, map[string]string{"error": err.Error()}, http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintln(w, result)
 }
